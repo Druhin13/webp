@@ -37,13 +37,8 @@ function convert() {
         return;
     }
 
-    if (!document.createElement('a').download) {
-        window.alert('Your browser does not support the download attribute!');
-        return;
-    }
-
-    if (!document.createElement('a').click) {
-        window.alert('Your browser does not support the click() method on anchors!');
+    if (!window.URL.createObjectURL) {
+        window.alert('Your browser does not support the URL API!');
         return;
     }
 
@@ -70,42 +65,6 @@ function convert() {
             canvas.toBlob(function (blob) {
                 const reader = new FileReader();
 
-
-                // reader.onload = function () {
-                //     const buffer = Buffer.from(reader.result);
-                //     const fileName = namingConvention.replace('{name}', file.name).replace('{width}', width).replace('{height}', height);
-                //     fs.writeFileSync(path.join(outputDir, fileName), buffer);
-                // };
-
-                // reader.onload = function () {
-                //     const buffer = Buffer.from(reader.result);
-                //     const fileName = namingConvention.replace('{name}', file.name).replace('{width}', width).replace('{height}', height);
-
-                //     // Create temporary anchor element
-                //     const link = document.createElement('a');
-                //     link.href = URL.createObjectURL(new Blob([buffer]));
-                //     link.download = fileName;
-
-                //     // Click the anchor to trigger download
-                //     document.body.appendChild(link);
-                //     link.click();
-                //     document.body.removeChild(link);
-                // };
-
-                // reader.onload = function () {
-                //     const buffer = Buffer.from(reader.result);
-                //     const fileName = namingConvention.replace('{name}', file.name).replace('{width}', width).replace('{height}', height);
-
-                //     // Create temporary link element
-                //     const link = document.createElement('a');
-                //     link.href = URL.createObjectURL(new Blob([buffer]));
-                //     link.download = fileName;
-
-                //     // Click the link to trigger download
-                //     link.click();
-                // };
-
-
                 reader.onload = function () {
                     const buffer = Buffer.from(reader.result);
                     const fileName = namingConvention.replace('{name}', file.name).replace('{width}', width).replace('{height}', height);
@@ -114,25 +73,27 @@ function convert() {
                     const link = document.createElement('a');
                     link.href = URL.createObjectURL(new Blob([buffer]));
                     link.target = '_blank';
-                    link.download = fileName;
 
                     // Append the link to the DOM
                     document.body.appendChild(link);
 
                     // Trigger the click event
-                    link.click();
+                    const evt = new MouseEvent("click", {
+                        view: window,
+                        bubbles: true,
+                        cancelable: true,
+                    });
+
+                    link.dispatchEvent(evt);
 
                     // Remove the link from the DOM
                     document.body.removeChild(link);
                 };
 
-
-
                 reader.readAsArrayBuffer(blob);
-
 
             });
         };
-        img.src = URL.createObjectURL(file);
+        img.src = window.URL.createObjectURL(file);
     }
 }
