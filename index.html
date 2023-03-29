@@ -1,36 +1,79 @@
 <!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.6.0/jszip.min.js"></script>
-    <!-- app.js -->
-    <script src="app.js"></script>
-    <!-- style.css -->
-    <link rel="stylesheet" href="style.css">
-
-</head>
-
-<body>
-    <h1>WebP Converter</h1>
+<html>
+  <head>
+    <title>WebP Converter</title>
+  </head>
+  <body>
     <form>
-      <label for="clientName">Client Name:</label>
-      <input type="text" id="clientName" name="clientName"><br>
-    
-      <label for="serviceName">Service:</label>
-      <input type="text" id="serviceName" name="serviceName"><br>
-    
-      <label for="targetSize">Target Size (KB):</label>
-      <input type="number" id="targetSize" name="targetSize"><br>
-    
-      <label for="fileInput">Select Images:</label>
-      <input type="file" id="fileInput" name="fileInput" multiple><br>
-    
-      <button type="button" onclick="convertImages()">Convert Images</button>
+      <label for="fileInput">Select an image file:</label>
+      <input type="file" id="fileInput" name="fileInput"><br><br>
+      <label for="widthInput">Width (pixels):</label>
+      <input type="number" id="widthInput" name="widthInput" min="1"><br><br>
+      <label for="qualityInput">Quality (%):</label>
+      <input type="range" id="qualityInput" name="qualityInput" min="0" max="100" step="1" value="50"><br><br>
+      <input type="button" value="Convert to WebP" onclick="convertToWebP()">
     </form>
-</body>
-
+    <div id="progress"></div>
+  </body>
+  <script>
+    function convertToWebP() {
+      const fileInput = document.getElementById('fileInput');
+      const widthInput = document.getElementById('widthInput');
+      const qualityInput = document.getElementById('qualityInput');
+      const progress = document.getElementById('progress');
+      
+      const file = fileInput.files[0];
+      const width = widthInput.value;
+      const quality = qualityInput.value / 100;
+      
+      if (!file) {
+        alert('Please select a file');
+        return;
+      }
+      
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      
+      reader.onload = function(event) {
+        const img = new Image();
+        img.src = event.target.result;
+        
+        img.onload = function() {
+          const canvas = document.createElement('canvas');
+          const scale = width / img.width;
+          
+          canvas.width = width;
+          canvas.height = img.height * scale;
+          
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          
+          canvas.toBlob(function(blob) {
+            const url = URL.createObjectURL(blob);
+            
+            console.log('Conversion started');
+            const encoder = new window.WebPEncoder();
+            encoder.quality = quality;
+            encoder.encode(canvas, function(webp) {
+              const compressedBlob = new Blob([webp]);
+              const compressedUrl = URL.createObjectURL(compressedBlob);
+              
+              const link = document.createElement('a');
+              link.href = compressedUrl;
+              link.download = file.name.replace(/\.[^/.]+$/, "") + '.webp';
+              link.click();
+              
+              URL.revokeObjectURL(url);
+              URL.revokeObjectURL(compressedUrl);
+            }, progressCallback);
+          }, 'image/webp', quality);
+        }
+      };
+    }
+    
+    function progressCallback(progress) {
+      const progressDiv = document.getElementById('progress');
+      progressDiv.innerHTML = 'Progress: ' + (progress * 100).toFixed(2) + '%';
+    }
+  </script>
 </html>
