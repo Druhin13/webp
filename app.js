@@ -1,99 +1,66 @@
-function convert() {
-    const targetSize = parseInt(document.getElementById('targetSizeInput').value) * 1024; // convert to bytes
-    const namingConvention = document.getElementById('nameInput').value;
-    const files = document.getElementById('fileInput').files;
-    const outputDir = "output"; // name of output directory
+const convertBtn = document.getElementById("convertBtn");
+convertBtn.addEventListener("click", () => {
+    const clientName = document.getElementById("clientName").value;
+    const serviceName = document.getElementById("serviceName").value;
+    const targetSize = document.getElementById("targetSize").value * 1024; // convert to bytes
+    const files = document.getElementById("imageFiles").files;
 
-    // create output directory if it doesn't exist
-    if (!window.File) {
-        window.alert('Your browser does not support the File API!');
+    if (files.length === 0) {
+        alert("Please select at least one file to convert.");
         return;
     }
 
-    // create output directory if it doesn't exist
-    if (!window.File.prototype.slice) {
-        Object.defineProperty(window.File.prototype, 'slice', {
-            value: window.File.prototype.webkitSlice || window.File.prototype.mozSlice
-        });
+    const namingConvention = `${clientName}_${serviceName}/`;
+    let counter = 1;
+    for (const file of files) {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => {
+            const img = new Image();
+            img.src = reader.result;
+            img.onload = () => {
+                const canvas = document.createElement("canvas");
+                const ctx = canvas.getContext("2d");
+                canvas.width = img.width;
+                canvas.height = img.height;
+                ctx.drawImage(img, 0, 0);
+                canvas.toBlob((blob) => {
+                    const newFileSize = blob.size;
+                    let quality = 1;
+                    while (newFileSize > targetSize) {
+                        quality -= 0.05;
+                        const webp = canvas.toDataURL("image/webp", quality);
+                        blob = dataURLtoBlob(webp);
+                        newFileSize = blob.size;
+                    }
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = `${namingConvention}image-${counter}.webp`;
+                    document.body.appendChild(a); // add link to page
+                    a.click(); // simulate click to trigger download
+                    document.body.removeChild(a); // remove link from page
+                    URL.revokeObjectURL(url);
+                    counter++;
+                    if (counter > files.length) {
+                        alert("All files converted and downloaded successfully.");
+                    }
+                }, "image/webp");
+            }
+        }
     }
+});
 
-    if (!window.FileReader) {
-        window.alert('Your browser does not support the FileReader API!');
-        return;
+function dataURLtoBlob(dataURL) {
+    const arr = dataURL.split(",");
+    const mime = arr[0].match(/:(.*?);/)[1];
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    while (n--) {
+        u8arr[n] = bstr.charCodeAt(n);
     }
-
-    if (!window.Blob) {
-        window.alert('Your browser does not support the Blob API!');
-        return;
-    }
-
-    if (!document.createElement('canvas').getContext) {
-        window.alert('Your browser does not support canvas!');
-        return;
-    }
-
-    if (!document.createElement('canvas').toBlob) {
-        window.alert('Your browser does not support toBlob()!');
-        return;
-    }
-
-    if (!window.URL.createObjectURL) {
-        window.alert('Your browser does not support the URL API!');
-        return;
-    }
-
-    if (!fs.existsSync(outputDir)) {
-        fs.mkdirSync(outputDir);
-    }
-
-    for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        const img = new Image();
-
-        img.onload = function () {
-            const canvas = document.createElement('canvas');
-            const maxSize = Math.sqrt(targetSize * Math.pow(img.width / img.height, 2));
-            const width = img.width > img.height ? maxSize : targetSize / maxSize;
-            const height = img.width > img.height ? targetSize / maxSize : maxSize;
-
-            canvas.width = width;
-            canvas.height = height;
-
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0, width, height);
-
-            canvas.toBlob(function (blob) {
-                const reader = new FileReader();
-
-                reader.onload = function () {
-                    const buffer = Buffer.from(reader.result);
-                    const fileName = namingConvention.replace('{name}', file.name).replace('{width}', width).replace('{height}', height);
-
-                    // Create temporary link element
-                    const link = document.createElement('a');
-                    link.href = URL.createObjectURL(new Blob([buffer]));
-                    link.target = '_blank';
-
-                    // Append the link to the DOM
-                    document.body.appendChild(link);
-
-                    // Trigger the click event
-                    const evt = new MouseEvent("click", {
-                        view: window,
-                        bubbles: true,
-                        cancelable: true,
-                    });
-
-                    link.dispatchEvent(evt);
-
-                    // Remove the link from the DOM
-                    document.body.removeChild(link);
-                };
-
-                reader.readAsArrayBuffer(blob);
-
-            });
-        };
-        img.src = window.URL.createObjectURL(file);
-    }
+    return new Blob([u8arr], {
+        type: mime
+    });
 }

@@ -6,17 +6,28 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.6.0/jszip.min.js"></script>
     <!-- app.js -->
     <script src="app.js"></script>
     <!-- style.css -->
     <link rel="stylesheet" href="style.css">
+
 </head>
 
 <body>
-    <input type="text" id="targetSizeInput" placeholder="Target Size in KB">
-    <input type="text" id="nameInput" placeholder="Name Convention">
-    <input type="file" id="fileInput" multiple>
-    <button onclick="convert()">Convert</button>
+    <h1>WEBP Converter</h1>
+    <form>
+        <label for="clientName">Client Name:</label>
+        <input type="text" id="clientName" name="clientName"><br><br>
+        <label for="serviceName">Service Name:</label>
+        <input type="text" id="serviceName" name="serviceName"><br><br>
+        <label for="targetSize">Target Size (in KB):</label>
+        <input type="number" id="targetSize" name="targetSize"><br><br>
+        <label for="imageFiles">Select Images:</label>
+        <input type="file" id="imageFiles" name="imageFiles" multiple><br><br>
+        <button type="button" id="convertBtn">Convert to WEBP</button>
+    </form>
+    <div id="output"></div>
 </body>
 
 </html>
