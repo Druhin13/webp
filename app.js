@@ -44,75 +44,37 @@ async function convertImages() {
                     blob = await dataURLtoBlob(dataURL);
 
                     // Convert the Blob to a WebP image
-                    webPBlob = await blobToWebP(blob);
+                    webPBlob = await blobToWebP(blob, function (webPBlob) {
+                        // Check the size of the WebP image
+                        const size = webPBlob.size;
 
-                    // Check the size of the WebP image
-                    const size = webPBlob.size;
+                        if (size <= targetSize) {
+                            done = true;
+                            const url = URL.createObjectURL(webPBlob);
+                            const link = document.createElement("a");
+                            const fileName = `${clientName}/${serviceName}-image${i + 1}.webp`;
 
-                    if (size <= targetSize) {
-                        done = true;
-                    } else {
-                        // Decrease the quality value and try again
-                        quality -= 0.1;
-                    }
+                            // Download the WebP image
+                            link.setAttribute("href", url);
+                            link.setAttribute("download", fileName);
+                            document.body.appendChild(link);
+                            link.click();
+
+                            // Clean up
+                            document.body.removeChild(link);
+                            URL.revokeObjectURL(url);
+                        } else {
+                            // Decrease the quality value and try again
+                            quality -= 0.1;
+                        }
+                    });
                 }
-
-                const url = URL.createObjectURL(webPBlob);
-                const link = document.createElement("a");
-                const fileName = `${clientName}/${serviceName}-image${i + 1}.webp`;
-
-                // Download the WebP image
-                link.setAttribute("href", url);
-                link.setAttribute("download", fileName);
-                document.body.appendChild(link);
-                link.click();
-
-                // Clean up
-                document.body.removeChild(link);
-                URL.revokeObjectURL(url);
             };
         };
 
         reader.readAsDataURL(file);
     }
 }
-
-
-function dataURLtoBlob(dataURL) {
-    const arr = dataURL.split(",");
-    const mime = arr[0].match(/:(.*?);/)[1];
-    const bstr = atob(arr[1]);
-    let n = bstr.length;
-    const u8arr = new Uint8Array(n);
-
-    while (n--) {
-        u8arr[n] = bstr.charCodeAt(n);
-    }
-
-    return new Blob([u8arr], {
-        type: mime
-    });
-}
-
-function blobToWebP(blob, callback) {
-    const img = new Image();
-
-    img.onload = function () {
-        const canvas = document.createElement("canvas");
-        canvas.width = img.width;
-        canvas.height = img.height;
-
-        const ctx = canvas.getContext("2d");
-        ctx.drawImage(img, 0, 0);
-
-        canvas.toBlob(function (webPBlob) {
-            callback(webPBlob);
-        }, "image/webp", 0.5);
-    };
-
-    img.src = URL.createObjectURL(blob);
-}
-
 
 function dataURLtoBlob(dataURL) {
     const arr = dataURL.split(",");
