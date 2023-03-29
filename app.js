@@ -92,19 +92,41 @@ function convert() {
                 //     document.body.removeChild(link);
                 // };
 
+                // reader.onload = function () {
+                //     const buffer = Buffer.from(reader.result);
+                //     const fileName = namingConvention.replace('{name}', file.name).replace('{width}', width).replace('{height}', height);
+
+                //     // Create temporary link element
+                //     const link = document.createElement('a');
+                //     link.href = URL.createObjectURL(new Blob([buffer]));
+                //     link.download = fileName;
+
+                //     // Click the link to trigger download
+                //     link.click();
+                // };
+
+
                 reader.onload = function () {
                     const buffer = Buffer.from(reader.result);
                     const fileName = namingConvention.replace('{name}', file.name).replace('{width}', width).replace('{height}', height);
-                
+
                     // Create temporary link element
                     const link = document.createElement('a');
                     link.href = URL.createObjectURL(new Blob([buffer]));
+                    link.target = '_blank';
                     link.download = fileName;
-                
-                    // Click the link to trigger download
+
+                    // Append the link to the DOM
+                    document.body.appendChild(link);
+
+                    // Trigger the click event
                     link.click();
+
+                    // Remove the link from the DOM
+                    document.body.removeChild(link);
                 };
-                
+
+
 
                 reader.readAsArrayBuffer(blob);
 
