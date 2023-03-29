@@ -69,12 +69,32 @@ function convert() {
 
             canvas.toBlob(function (blob) {
                 const reader = new FileReader();
+
+
+                // reader.onload = function () {
+                //     const buffer = Buffer.from(reader.result);
+                //     const fileName = namingConvention.replace('{name}', file.name).replace('{width}', width).replace('{height}', height);
+                //     fs.writeFileSync(path.join(outputDir, fileName), buffer);
+                // };
+
                 reader.onload = function () {
                     const buffer = Buffer.from(reader.result);
                     const fileName = namingConvention.replace('{name}', file.name).replace('{width}', width).replace('{height}', height);
-                    fs.writeFileSync(path.join(outputDir, fileName), buffer);
+
+                    // Create temporary anchor element
+                    const link = document.createElement('a');
+                    link.href = URL.createObjectURL(new Blob([buffer]));
+                    link.download = fileName;
+
+                    // Click the anchor to trigger download
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
                 };
+
                 reader.readAsArrayBuffer(blob);
+
+
             });
         };
         img.src = URL.createObjectURL(file);
