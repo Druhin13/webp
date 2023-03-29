@@ -2,138 +2,184 @@
 <html>
 
 <head>
-    <title>Image Compressor</title>
+    <title>WebP Converter</title>
+    <link rel="stylesheet" href="style.css">
+
 </head>
 
 <body>
-    <input type="file" id="input" multiple>
-    <br>
-    <label for="width">Width (pixels):</label>
-    <input type="number" id="width" min="1" max="10000" value="500">
-    <br>
-    <label for="quality">Quality:</label>
-    <select id="quality">
-        <option value="0.1">10%</option>
-        <option value="0.2">20%</option>
-        <option value="0.3">30%</option>
-        <option value="0.4">40%</option>
-        <option value="0.5" selected>50%</option>
-        <option value="0.6">60%</option>
-        <option value="0.7">70%</option>
-        <option value="0.8">80%</option>
-        <option value="0.9">90%</option>
-        <option value="1">100%</option>
-    </select>
-    <br>
-    <button id="compress">Compress Images</button>
-    <br>
-    <br>
-    <div id="output"></div>
+    <h1>WebP Converter</h1>
+    <form>
+        <div>
+            <label for="client-name">Client Name:</label>
+            <input type="text" id="client-name" name="client-name">
+        </div>
+        <div>
+            <label for="service-name">Service Name:</label>
+            <input type="text" id="service-name" name="service-name">
+        </div>
+        <div>
+            <label for="image-width">Image Width:</label>
+            <input type="number" id="image-width" name="image-width" min="1">
+        </div>
+        <div>
+            <label for="quality">Image Quality:</label>
+            <select id="quality" name="quality">
+                <option value="10">10%</option>
+                <option value="20">20%</option>
+                <option value="30">30%</option>
+                <option value="40">40%</option>
+                <option value="50">50%</option>
+                <option value="60">60%</option>
+                <option value="70">70%</option>
+                <option value="80">80%</option>
+                <option value="90">90%</option>
+                <option value="100">100%</option>
+            </select>
+        </div>
+        <div>
+            <label for="image-files">Image Files:</label>
+            <input type="file" id="image-files" name="image-files" accept="image/*" multiple>
+        </div>
+        <div>
+            <button type="button" id="convert-button">Convert</button>
+        </div>
+    </form>
+    <div id="status"></div>
 
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.7.1/dist/jszip.min.js"></script>
     <script>
-        function compressImage(file, width, quality, index) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = function (event) {
-                    const img = new Image();
-                    img.onload = function () {
-                        const canvas = document.createElement("canvas");
-                        const aspectRatio = img.width / img.height;
-                        const canvasWidth = width;
-                        const canvasHeight = canvasWidth / aspectRatio;
-                        canvas.width = canvasWidth;
-                        canvas.height = canvasHeight;
-                        const ctx = canvas.getContext("2d");
-                        ctx.drawImage(img, 0, 0, canvasWidth, canvasHeight);
-                        canvas.toBlob(
-                            (blob) => {
-                                const fileNameParts = file.name.split(".");
-                                const extension = fileNameParts[fileNameParts.length - 1];
-                                const newFileName = `${fileNameParts.slice(
-                    0,
-                    fileNameParts.length - 1
-                  )}_compressed_${width}px.${extension}`;
-                                const url = URL.createObjectURL(blob);
-                                const xhr = new XMLHttpRequest();
-                                xhr.open("GET", url, true);
-                                xhr.responseType = "blob";
-                                xhr.onload = function () {
-                                    const newBlob = xhr.response;
-                                    const newUrl = URL.createObjectURL(newBlob);
-                                    const a = document.createElement("a");
-                                    a.href = newUrl;
-                                    a.download = newFileName;
-                                    a.click();
-                                    resolve(index);
-                                };
-                                xhr.send();
-                            },
-                            "image/webp",
-                            quality
-                        );
-                    };
-                    img.src = event.target.result;
-                };
-                reader.readAsDataURL(file);
-            });
-        }
+        const convertButton = document.getElementById("convert-button");
+        convertButton.addEventListener("click", convertImages);
 
-        function compressImages(files, width, quality) {
-            const promises = [];
-            for (let i = 0; i < files.length; i++) {
-                promises.push(compressImage(files[i], width, quality, i));
-            }
-            Promise.all(promises).then((indices) => {
-                let message = "All images compressed successfully!";
-                for (let i = 0; i < indices.length; i++) {
-                    message += `\nImage ${indices[i] + 1}: ${files[indices[i]].name}`;
+        function convertImages() {
+            const clientName = document.getElementById("client-name").value;
+            const serviceName = document.getElementById("service-name").value;
+            const imageWidth = document.getElementById("image-width").value;
+            const quality = parseInt(document.getElementById("quality").value) / 100;
+            const imageFiles = document.getElementById("image-files").files;
+
+            const canvas = document.createElement("canvas");
+            const ctx = canvas.getContext("2d");
+
+            const zip = new JSZip();
+            const reader = new FileReader();
+
+            let convertedSize = 0;
+            let originalSize = 0;
+            let index = 0;
+            let startTime = new Date();
+
+            setStatus("Conversion started");
+
+            function convertNextImage() {
+                if (index >= imageFiles.length) {
+                    setStatus("Creating zip file");
+
+                    zip.generateAsync({
+                        type: "blob"
+                    }).then(function (content) {
+                        saveAs(content, `${clientName}_${serviceName}.zip`);
+                        let endTime = new Date();
+                        let elapsedSeconds = (endTime - startTime) / 1000;
+                        let elapsedMinutes = Math.floor(elapsedSeconds / 60);
+                        elapsedSeconds = elapsedSeconds % 60;
+
+                        let finalSize = content.size;
+                        let sizeDifference = ((originalSize - finalSize) / originalSize) * 100;
+                        let statusMessage = `Conversion completed`;
+
+                        if (elapsedMinutes > 0) {
+                            statusMessage += ` in ${elapsedMinutes} minute${elapsedMinutes > 1 ? "s" : ""}`;
+                            if (elapsedSeconds > 0) {
+                                statusMessage +=
+                                    ` and ${elapsedSeconds.toFixed(2)} second${elapsedSeconds > 1 ? "s" : ""}`;
+                            }
+                        } else {
+                            statusMessage += ` in ${elapsedSeconds.toFixed(2)} seconds`;
+                        }
+
+                        statusMessage +=
+                            `. Original size was ${formatSize(originalSize)}, final size is ${formatSize(finalSize)}, a reduction of ${sizeDifference.toFixed(2)}%.`;
+
+                        setStatus(statusMessage);
+                    });
+
+                    return;
                 }
-                console.log(message);
-            });
+
+                const imageFile = imageFiles[index];
+
+                setStatus(`Converting file ${index + 1}`);
+
+                reader.onload = function () {
+                    const img = new Image();
+                    img.src = reader.result;
+
+                    img.onload = function () {
+                        const aspectRatio = img.width / img.height;
+                        const newHeight = imageWidth / aspectRatio;
+
+                        canvas.width = imageWidth;
+                        canvas.height = newHeight;
+
+                        ctx.drawImage(img, 0, 0, imageWidth, newHeight);
+
+                        canvas.toBlob(function (blob) {
+                            const fileName = `${clientName}_${serviceName}-${index + 1}.webp`;
+
+                            zip.file(fileName, blob);
+
+                            if (index === 0) {
+                                for (const imageFile of imageFiles) {
+                                    originalSize += imageFile.size;
+                                }
+                            }
+
+                            convertedSize += blob.size;
+
+                            index++;
+                            convertNextImage();
+                        }, "image/webp", quality);
+                    };
+                };
+
+                reader.readAsDataURL(imageFile);
+            }
+
+            convertNextImage();
         }
 
-        function download(url, filename, mimeType) {
-            fetch(url)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
+        function setStatus(statusText) {
+            const statusElement = document.getElementById("status");
+            statusElement.textContent = statusText;
+        }
+
+        function formatSize(sizeInBytes) {
+            const sizeInMb = sizeInBytes / (1024 * 1024);
+            if (sizeInMb < 1) {
+                const sizeInKb = sizeInBytes / 1024;
+                return `${sizeInKb.toFixed(2)} KB`;
+            } else {
+                const sizeInMbFixed = sizeInMb.toFixed(2);
+                if (sizeInMb < 1024) {
+                    return `${sizeInMbFixed} MB`;
+                } else {
+                    const sizeInGb = sizeInMb / 1024;
+                    const sizeInGbFixed = sizeInGb.toFixed(2);
+                    if (sizeInGb < 1024) {
+                        return `${sizeInGbFixed} GB`;
+                    } else {
+                        const sizeInTb = sizeInGb / 1024;
+                        const sizeInTbFixed = sizeInTb.toFixed(2);
+                        return `${sizeInTbFixed} TB`;
                     }
-                    return response.blob();
-                })
-                .then(blob => {
-                    // Create an object URL from the blob
-                    const url = URL.createObjectURL(blob);
-
-                    // Create a link element
-                    const link = document.createElement('a');
-                    link.href = url;
-                    link.download = filename;
-                    link.type = mimeType;
-
-                    // Append the link element to the DOM
-                    document.body.appendChild(link);
-
-                    // Programmatically click the link to trigger the download
-                    link.click();
-
-                    // Remove the link from the DOM
-                    document.body.removeChild(link);
-
-                    // Revoke the object URL to free up memory
-                    URL.revokeObjectURL(url);
-                })
-                .catch(error => {
-                    console.error('There was a problem with the download:', error);
-                });
+                }
+            }
         }
-
-        document.getElementById("compress").addEventListener("click", () => {
-            const files = document.getElementById("input").files;
-            const width = document.getElementById("width").value;
-            const quality = document.getElementById("quality").value;
-            compressImages(files, width, quality);
-        });
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+
 </body>
 
 </html>

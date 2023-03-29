@@ -1,116 +1,78 @@
-async function convertImages() {
-    const clientName = document.getElementById("clientName").value;
-    const serviceName = document.getElementById("serviceName").value;
-    const targetSize = document.getElementById("targetSize").value * 1024; // Convert to bytes
+function convertNextImage() {
+    if (index >= imageFiles.length) {
+        setStatus("Creating zip file");
 
-    const fileInput = document.getElementById("fileInput");
-    const files = fileInput.files;
+        zip.generateAsync({
+            type: "blob"
+        }).then(function (content) {
+            saveAs(content, `${clientName}_${serviceName}.zip`);
+            let endTime = new Date();
+            let elapsedSeconds = (endTime - startTime) / 1000;
+            let elapsedMinutes = Math.floor(elapsedSeconds / 60);
+            elapsedSeconds = elapsedSeconds % 60;
 
-    if (files.length === 0) {
-        alert("Please select at least one file to convert.");
+            let finalSize = content.size;
+            let sizeDifference = ((originalSize - finalSize) / originalSize) * 100;
+
+            let statusMessage = `Conversion completed`;
+
+            if (elapsedMinutes > 0) {
+                statusMessage += ` in ${elapsedMinutes} minute${elapsedMinutes > 1 ? "s" : ""}`;
+                if (elapsedSeconds > 0) {
+                    statusMessage += ` and ${elapsedSeconds.toFixed(2)} second${elapsedSeconds > 1 ? "s" : ""}`;
+                }
+            } else {
+                statusMessage += ` in ${elapsedSeconds.toFixed(2)} seconds`;
+            }
+
+            statusMessage += `. Original size was ${formatSize(originalSize)}, final size is ${formatSize(finalSize)}, a reduction of ${sizeDifference.toFixed(2)}%.`;
+
+            setStatus(statusMessage);
+        });
+
         return;
     }
 
-    let counter = 1;
+    const imageFile = imageFiles[index];
 
-    for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        const image = new Image();
-        const reader = new FileReader();
+    setStatus(`Converting file ${index + 1}`);
 
-        reader.onload = function (event) {
-            image.src = event.target.result;
-            image.onload = async function () {
-                const canvas = document.createElement("canvas");
-                const ctx = canvas.getContext("2d");
+    const img = new Image();
+    img.src = URL.createObjectURL(imageFile);
 
-                // Set canvas dimensions to match the image
-                canvas.width = image.width / 2;
-                canvas.height = image.height / 2;
+    img.onload = function () {
+        const aspectRatio = img.width / img.height;
+        const newHeight = imageWidth / aspectRatio;
 
-                // Draw the image onto the canvas
-                ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+        canvas.width = imageWidth;
+        canvas.height = newHeight;
 
-                let quality = 0.9; // Starting quality value
-                let done = false;
-                let dataURL, blob, webPBlob;
+        ctx.drawImage(img, 0, 0, imageWidth, newHeight);
 
-                // Iterate until target size is reached or max quality is reached
-                while (!done && quality > 0) {
-                    // Convert the canvas to a data URL with the current quality
-                    dataURL = canvas.toDataURL("image/jpeg", quality);
+        canvas.toBlob(function (blob) {
+            const fileName = `${clientName}_${serviceName}-${index + 1}.webp`;
 
-                    // Convert the data URL to a Blob
-                    blob = await dataURLtoBlob(dataURL);
+            createImageBitmap(blob).then(function (imgBitmap) {
+                canvas.width = imgBitmap.width;
+                canvas.height = imgBitmap.height;
 
-                    // Convert the Blob to a WebP image
-                    webPBlob = await blobToWebP(blob);
+                ctx.drawImage(imgBitmap, 0, 0);
 
-                    // Check the size of the WebP image
-                    const size = webPBlob.size;
+                canvas.toBlob(function (convertedBlob) {
+                    zip.file(fileName, convertedBlob);
 
-                    if (size <= targetSize) {
-                        done = true;
-                    } else {
-                        // Decrease the quality value and try again
-                        quality -= 0.1;
+                    convertedSize += convertedBlob.size;
+
+                    if (index === 0) {
+                        for (const imageFile of imageFiles) {
+                            originalSize += imageFile.size;
+                        }
                     }
-                }
 
-                const url = URL.createObjectURL(webPBlob);
-                const link = document.createElement("a");
-                const fileName = `${clientName}/${serviceName}-image${i + 1}.webp`;
-
-                // Download the WebP image
-                link.setAttribute("href", url);
-                link.setAttribute("download", fileName);
-                document.body.appendChild(link);
-                link.click();
-
-                // Clean up
-                document.body.removeChild(link);
-                URL.revokeObjectURL(url);
-            };
-        };
-
-        reader.readAsDataURL(file);
-    }
-}
-
-
-function dataURLtoBlob(dataURL) {
-    const arr = dataURL.split(",");
-    const mime = arr[0].match(/:(.*?);/)[1];
-    const bstr = atob(arr[1]);
-    let n = bstr.length;
-    const u8arr = new Uint8Array(n);
-
-    while (n--) {
-        u8arr[n] = bstr.charCodeAt(n);
-    }
-
-    return new Blob([u8arr], {
-        type: mime
-    });
-}
-
-function blobToWebP(blob) {
-    return new Promise((resolve) => {
-        const img = new Image();
-
-        img.onload = function () {
-            const canvas = document.createElement("canvas");
-            canvas.width = img.width;
-            canvas.height = img.height;
-
-            const ctx = canvas.getContext("2d");
-            ctx.drawImage(img, 0, 0);
-
-            canvas.toBlob(function (webPBlob) {
-                resolve(webPBlob);
-            }, "image/webp", 0.5);
-        };
-
-        img.src = URL.createObjectURL(blob);
-    });
+                    index++;
+                    convertNextImage();
+                }, "image/webp", quality);
+            });
+        }, "image/png");
+    };
 }
