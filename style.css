@@ -1,13 +1,140 @@
-body {
-    font-family: Arial, sans-serif;
-    background-color: #f5f5f5;
+*{
+    font-family: NM, sans-serif;
+    font-weight: 500;
+}
+
+.body {
+    display: flex;
+    padding-top: 10vh;
+    justify-content: center;
+    align-items: flex-start;
+    font-family: NM, sans-serif;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.title1 {
+    color: #131313;
+    font-size: 1.125rem;
+}
+
+.subtitle1 {
+    margin-top: 0.5rem;
+    color: #5a5c60;
+    font-size: 0.875rem;
+}
+
+.wrapper {
+    width: 100%;
+    height: auto;
+    max-width: 30rem;
+    padding-top: 2rem;
+    padding-right: 1.5rem;
+    padding-bottom: 2.5rem;
+    padding-left: 1.5rem;
+    border-top-left-radius: 0.625rem;
+    border-top-right-radius: 0.625rem;
+    border-bottom-left-radius: 0.625rem;
+    border-bottom-right-radius: 0.625rem;
+    background-color: hsla(0, 0.00%, 100.00%, 1.00);
+    box-shadow: 0 2px 50px 0 hsla(0, 0.00%, 7.45%, 0.15);
+}
+
+.logo {
+    width: 4rem;
+    height: 4rem;
+    margin-bottom: 1.5rem;
+    border-top-left-radius: 50vw;
+    border-top-right-radius: 50vw;
+    border-bottom-left-radius: 50vw;
+    border-bottom-right-radius: 50vw;
+    background-image: url(https://uploads-ssl.webflow.com/6423f2c24714c9829d84d621/64249e9c892aff110d954636_logo.jpg);
+    background-position: 50% 50%;
+    background-size: 5rem 5rem;
+    background-repeat: no-repeat;
+    display: block;
+}
+
+.hide {
+    display: none;
+}
+
+.drag {
+    position: relative;
+    display: flex;
+    width: 100%;
+    height: 14rem;
+    margin-top: 1.5rem;
+    margin-bottom: 3rem;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    grid-column-gap: 0.5rem;
+    grid-row-gap: 0.5rem;
+    border-top-left-radius: 0.3125rem;
+    border-top-right-radius: 0.3125rem;
+    border-bottom-left-radius: 0.3125rem;
+    border-bottom-right-radius: 0.3125rem;
+    background-color: #f8f8f8;
+    outline-color: #131313;
+    outline-offset: -1px;
+    outline-style: dashed;
+    outline-width: 1px;
   }
-  
-  h1 {
-    text-align: center;
-    margin-bottom: 30px;
+
+  .title2 {
+    font-size: 0.8125rem;
+    line-height: 1;
   }
-  
+
+  .underline {
+    text-decoration: underline;
+  }
+
+  .drag-text2 {
+    color: #74737a;
+    font-size: 0.75rem;
+    line-height: 1;
+  }
+
+  .subtitle2 {
+    
+    margin-top: 1rem;
+    color: #74737a;
+    font-size: 0.75rem;
+    line-height: 1;
+  }
+
+  .textbox {
+    height: 2.125rem;
+    /* margin-top: 0.5rem; */
+    border-top-style: solid;
+    border-top-width: 1px;
+    border-top-color: #e0e0e0;
+    border-right-style: solid;
+    border-right-width: 1px;
+    border-right-color: #e0e0e0;
+    border-bottom-style: solid;
+    border-bottom-width: 1px;
+    border-bottom-color: #e0e0e0;
+    border-left-style: solid;
+    border-left-width: 1px;
+    border-left-color: #e0e0e0;
+    border-top-left-radius: 0.3125rem;
+    border-top-right-radius: 0.3125rem;
+    border-bottom-left-radius: 0.3125rem;
+    border-bottom-right-radius: 0.3125rem;
+    width: 100%;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+    padding-left: 0.5rem;
+  }
+
+  ::placeholder { /* Chrome, Firefox, Opera, Safari 10.1+ */
+    opacity: 0.4; /* Firefox */
+  }
+
+/*   
   form {
     background-color: #fff;
     max-width: 500px;
@@ -15,25 +142,25 @@ body {
     padding: 30px;
     border-radius: 10px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-  }
-  
-  label {
+  } */
+
+label {
     display: block;
     margin-bottom: 5px;
-  }
-  
-  input,
-  select {
-    border: none;
-    background-color: #f2f2f2;
-    border-radius: 5px;
-    padding: 10px;
+}
+
+input,
+select {
+    /* border: none; */
+    /* background-color: #f2f2f2; */
+    /* border-radius: 5px; */
+    /* padding: 10px; */
     width: 100%;
-    margin-bottom: 15px;
+    /* margin-bottom: 15px; */
     box-sizing: border-box;
-  }
-  
-  input[type="file"] {
+}
+
+input[type="file"] {
     border: none;
     background-color: #f2f2f2;
     border-radius: 5px;
@@ -42,29 +169,61 @@ body {
     margin-bottom: 15px;
     box-sizing: border-box;
     cursor: pointer;
-  }
-  
-  button {
-    background-color: #4CAF50;
+}
+
+.button {
+    display: inline-block;
+    margin-top: 1.5rem;
+    padding-top: 0.625rem;
+    padding-right: 2.25rem;
+    padding-bottom: 0.625rem;
+    padding-left: 2.25rem;
+    justify-content: flex-end;
+    border-top-left-radius: 0.3125rem;
+    border-top-right-radius: 0.3125rem;
+    border-bottom-left-radius: 0.3125rem;
+    border-bottom-right-radius: 0.3125rem;
+    background-color: #205db9;
+    font-size: 0.8125rem;
+    line-height: 1.25;
     color: white;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    margin-bottom: 15px;
-    transition: background-color 0.3s ease;
+    border: 0;
   }
-  
-  button:hover {
-    background-color: #3e8e41;
-  }
-  
-  #status {
-    background-color: #fff;
-    max-width: 500px;
-    margin: 0 auto;
-    padding: 30px;
-    border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-  }
-  
+
+button:hover {
+    background-color: #0F4494;
+}
+
+
+.status {
+    display: flex;
+    width: 100%;
+    min-height: 2.125rem;
+    margin-top: 2rem;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+    padding-left: 0.5rem;
+    border-top-left-radius: 0.3125rem;
+    border-top-right-radius: 0.3125rem;
+    border-bottom-left-radius: 0.3125rem;
+    border-bottom-right-radius: 0.3125rem;
+    background-color: hsla(0, 0.00%, 97.25%, 1.00);
+    color: #74737a;
+    font-size: 0.75rem;
+}
+
+@font-face {
+    font-family: 'NM';
+    src: url('https://uploads-ssl.webflow.com/6423f2c24714c9829d84d621/64249b080e2cc25c6dd84fe2_NeueMontreal-Medium.woff2') format('woff2');
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'NM';
+    src: url('https://uploads-ssl.webflow.com/6423f2c24714c9829d84d621/64249b08fe84438708853e16_NeueMontreal-Regular.woff2') format('woff2');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
