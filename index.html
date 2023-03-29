@@ -15,19 +15,22 @@
 </head>
 
 <body>
-    <h1>WEBP Converter</h1>
+    <h1>WebP Converter</h1>
     <form>
-        <label for="clientName">Client Name:</label>
-        <input type="text" id="clientName" name="clientName"><br><br>
-        <label for="serviceName">Service Name:</label>
-        <input type="text" id="serviceName" name="serviceName"><br><br>
-        <label for="targetSize">Target Size (in KB):</label>
-        <input type="number" id="targetSize" name="targetSize"><br><br>
-        <label for="imageFiles">Select Images:</label>
-        <input type="file" id="imageFiles" name="imageFiles" multiple><br><br>
-        <button type="button" id="convertBtn">Convert to WEBP</button>
+      <label for="clientName">Client Name:</label>
+      <input type="text" id="clientName" name="clientName"><br>
+    
+      <label for="serviceName">Service:</label>
+      <input type="text" id="serviceName" name="serviceName"><br>
+    
+      <label for="targetSize">Target Size (KB):</label>
+      <input type="number" id="targetSize" name="targetSize"><br>
+    
+      <label for="fileInput">Select Images:</label>
+      <input type="file" id="fileInput" name="fileInput" multiple><br>
+    
+      <button type="button" onclick="convertImages()">Convert Images</button>
     </form>
-    <div id="output"></div>
 </body>
 
 </html>
