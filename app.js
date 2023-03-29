@@ -82,9 +82,25 @@ function convert() {
                     const fileName = namingConvention.replace('{name}', file.name).replace('{width}', width).replace('{height}', height);
 
                     // Create temporary anchor element
-                    const link = document.createElement('a');
+                    // const link = document.createElement('a');
+                    // link.href = URL.createObjectURL(new Blob([buffer]));
+                    // link.download = fileName;
+
+                    if (!document.getElementById('downloadLink').download) {
+                        window.alert('Your browser does not support the download attribute!');
+                        return;
+                    }
+                    
+                    // ...
+                    
+                    // Create temporary anchor element
+                    const link = document.getElementById('downloadLink');
                     link.href = URL.createObjectURL(new Blob([buffer]));
                     link.download = fileName;
+                    
+                    // Click the anchor to trigger download
+                    link.click();
+                    
 
                     // Click the anchor to trigger download
                     document.body.appendChild(link);
