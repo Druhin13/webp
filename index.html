@@ -1,79 +1,139 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>WebP Converter</title>
-  </head>
-  <body>
-    <form>
-      <label for="fileInput">Select an image file:</label>
-      <input type="file" id="fileInput" name="fileInput"><br><br>
-      <label for="widthInput">Width (pixels):</label>
-      <input type="number" id="widthInput" name="widthInput" min="1"><br><br>
-      <label for="qualityInput">Quality (%):</label>
-      <input type="range" id="qualityInput" name="qualityInput" min="0" max="100" step="1" value="50"><br><br>
-      <input type="button" value="Convert to WebP" onclick="convertToWebP()">
-    </form>
-    <div id="progress"></div>
-  </body>
-  <script>
-    function convertToWebP() {
-      const fileInput = document.getElementById('fileInput');
-      const widthInput = document.getElementById('widthInput');
-      const qualityInput = document.getElementById('qualityInput');
-      const progress = document.getElementById('progress');
-      
-      const file = fileInput.files[0];
-      const width = widthInput.value;
-      const quality = qualityInput.value / 100;
-      
-      if (!file) {
-        alert('Please select a file');
-        return;
-      }
-      
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      
-      reader.onload = function(event) {
-        const img = new Image();
-        img.src = event.target.result;
-        
-        img.onload = function() {
-          const canvas = document.createElement('canvas');
-          const scale = width / img.width;
-          
-          canvas.width = width;
-          canvas.height = img.height * scale;
-          
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-          
-          canvas.toBlob(function(blob) {
-            const url = URL.createObjectURL(blob);
-            
-            console.log('Conversion started');
-            const encoder = new window.WebPEncoder();
-            encoder.quality = quality;
-            encoder.encode(canvas, function(webp) {
-              const compressedBlob = new Blob([webp]);
-              const compressedUrl = URL.createObjectURL(compressedBlob);
-              
-              const link = document.createElement('a');
-              link.href = compressedUrl;
-              link.download = file.name.replace(/\.[^/.]+$/, "") + '.webp';
-              link.click();
-              
-              URL.revokeObjectURL(url);
-              URL.revokeObjectURL(compressedUrl);
-            }, progressCallback);
-          }, 'image/webp', quality);
+
+<head>
+    <title>Image Compressor</title>
+</head>
+
+<body>
+    <input type="file" id="input" multiple>
+    <br>
+    <label for="width">Width (pixels):</label>
+    <input type="number" id="width" min="1" max="10000" value="500">
+    <br>
+    <label for="quality">Quality:</label>
+    <select id="quality">
+        <option value="0.1">10%</option>
+        <option value="0.2">20%</option>
+        <option value="0.3">30%</option>
+        <option value="0.4">40%</option>
+        <option value="0.5" selected>50%</option>
+        <option value="0.6">60%</option>
+        <option value="0.7">70%</option>
+        <option value="0.8">80%</option>
+        <option value="0.9">90%</option>
+        <option value="1">100%</option>
+    </select>
+    <br>
+    <button id="compress">Compress Images</button>
+    <br>
+    <br>
+    <div id="output"></div>
+
+    <script>
+        function compressImage(file, width, quality, index) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = function (event) {
+                    const img = new Image();
+                    img.onload = function () {
+                        const canvas = document.createElement("canvas");
+                        const aspectRatio = img.width / img.height;
+                        const canvasWidth = width;
+                        const canvasHeight = canvasWidth / aspectRatio;
+                        canvas.width = canvasWidth;
+                        canvas.height = canvasHeight;
+                        const ctx = canvas.getContext("2d");
+                        ctx.drawImage(img, 0, 0, canvasWidth, canvasHeight);
+                        canvas.toBlob(
+                            (blob) => {
+                                const fileNameParts = file.name.split(".");
+                                const extension = fileNameParts[fileNameParts.length - 1];
+                                const newFileName = `${fileNameParts.slice(
+                    0,
+                    fileNameParts.length - 1
+                  )}_compressed_${width}px.${extension}`;
+                                const url = URL.createObjectURL(blob);
+                                const xhr = new XMLHttpRequest();
+                                xhr.open("GET", url, true);
+                                xhr.responseType = "blob";
+                                xhr.onload = function () {
+                                    const newBlob = xhr.response;
+                                    const newUrl = URL.createObjectURL(newBlob);
+                                    const a = document.createElement("a");
+                                    a.href = newUrl;
+                                    a.download = newFileName;
+                                    a.click();
+                                    resolve(index);
+                                };
+                                xhr.send();
+                            },
+                            "image/webp",
+                            quality
+                        );
+                    };
+                    img.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
         }
-      };
-    }
-    
-    function progressCallback(progress) {
-      const progressDiv = document.getElementById('progress');
-      progressDiv.innerHTML = 'Progress: ' + (progress * 100).toFixed(2) + '%';
-    }
-  </script>
+
+        function compressImages(files, width, quality) {
+            const promises = [];
+            for (let i = 0; i < files.length; i++) {
+                promises.push(compressImage(files[i], width, quality, i));
+            }
+            Promise.all(promises).then((indices) => {
+                let message = "All images compressed successfully!";
+                for (let i = 0; i < indices.length; i++) {
+                    message += `\nImage ${indices[i] + 1}: ${files[indices[i]].name}`;
+                }
+                console.log(message);
+            });
+        }
+
+        function download(url, filename, mimeType) {
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.blob();
+                })
+                .then(blob => {
+                    // Create an object URL from the blob
+                    const url = URL.createObjectURL(blob);
+
+                    // Create a link element
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = filename;
+                    link.type = mimeType;
+
+                    // Append the link element to the DOM
+                    document.body.appendChild(link);
+
+                    // Programmatically click the link to trigger the download
+                    link.click();
+
+                    // Remove the link from the DOM
+                    document.body.removeChild(link);
+
+                    // Revoke the object URL to free up memory
+                    URL.revokeObjectURL(url);
+                })
+                .catch(error => {
+                    console.error('There was a problem with the download:', error);
+                });
+        }
+
+        document.getElementById("compress").addEventListener("click", () => {
+            const files = document.getElementById("input").files;
+            const width = document.getElementById("width").value;
+            const quality = document.getElementById("quality").value;
+            compressImages(files, width, quality);
+        });
+    </script>
+</body>
+
 </html>
