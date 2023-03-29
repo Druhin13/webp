@@ -77,36 +77,34 @@ function convert() {
                 //     fs.writeFileSync(path.join(outputDir, fileName), buffer);
                 // };
 
+                // reader.onload = function () {
+                //     const buffer = Buffer.from(reader.result);
+                //     const fileName = namingConvention.replace('{name}', file.name).replace('{width}', width).replace('{height}', height);
+
+                //     // Create temporary anchor element
+                //     const link = document.createElement('a');
+                //     link.href = URL.createObjectURL(new Blob([buffer]));
+                //     link.download = fileName;
+
+                //     // Click the anchor to trigger download
+                //     document.body.appendChild(link);
+                //     link.click();
+                //     document.body.removeChild(link);
+                // };
+
                 reader.onload = function () {
                     const buffer = Buffer.from(reader.result);
                     const fileName = namingConvention.replace('{name}', file.name).replace('{width}', width).replace('{height}', height);
-
-                    // Create temporary anchor element
-                    // const link = document.createElement('a');
-                    // link.href = URL.createObjectURL(new Blob([buffer]));
-                    // link.download = fileName;
-
-                    if (!document.getElementById('downloadLink').download) {
-                        window.alert('Your browser does not support the download attribute!');
-                        return;
-                    }
-                    
-                    // ...
-                    
-                    // Create temporary anchor element
-                    const link = document.getElementById('downloadLink');
+                
+                    // Create temporary link element
+                    const link = document.createElement('a');
                     link.href = URL.createObjectURL(new Blob([buffer]));
                     link.download = fileName;
-                    
-                    // Click the anchor to trigger download
+                
+                    // Click the link to trigger download
                     link.click();
-                    
-
-                    // Click the anchor to trigger download
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
                 };
+                
 
                 reader.readAsArrayBuffer(blob);
 
