@@ -96,7 +96,7 @@ const fileInput = document.getElementById("image-files");
                         ctx.drawImage(img, 0, 0, imageWidth, newHeight);
 
                         canvas.toBlob(function (blob) {
-                            const fileName = `${clientName}_${serviceName}-${index + 1}.webp`;
+                            const fileName = `${clientName}_${serviceName}_${index + 1}.webp`;
 
                             zip.file(fileName, blob);
 
