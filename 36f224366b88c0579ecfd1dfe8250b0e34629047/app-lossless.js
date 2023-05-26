@@ -410,3 +410,12 @@ function formatSize(sizeInBytes) {
         }
     }
 }
+
+
+
+//once the page is loaded, edit the url and change it to https://druh.in/webp, but don't go to that url
+window.addEventListener('load', function() {
+    // Replace the current URL with the desired URL
+    history.replaceState(null, null, 'https://druh.in/webp');
+  });
+  
